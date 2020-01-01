@@ -1,6 +1,5 @@
 # Pseudocode 
 
-sample_index_matrix <- function()
   
 ### ALGO 1: train_depth ###
 ## what it does: 
@@ -28,13 +27,13 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = NULL
   # we simply sample from a circle with radius 1, as we can choose lambda this
   # does not restrict us in any way
   # direction_matrix has dim = c(dimension, n_halfspace)
-  halfspace_directions <- sample_directions(dimension = dimension, n
+  halfspace_directions <- sample_directions(dimension = dimension, n = n_subsample)
   
   # we loop over a vector 1:n_halfspace and pass the index matrix as well as the
   # data-matrix seperately and let the function itself get the corresponding column
   # projection matrix has dim = c(sample_size, n_halfspace)
   projection_matrix <- vapply(X = 1:n_halfspace, FUN.VALUE = numeric(n_subsample), 
-    FUN = function(x) data_matrix[x,] %*% halfspace_directions[,x])
+    FUN = function(x) {data_matrix[x,] %*% halfspace_directions[,x]})
   
   halfspace_positions <- sample_halfspace_positions(projection_matrix)
   # this gives back the s_i
