@@ -20,8 +20,8 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = NULL
   if (!is.null(seed)) set.seed(seed)
   
   # index matrix has dim = c(sample_size, n_halfspace)
-  index_matrix <- sample_index_matrix(n = n_complete_obs, size = n_subsample, 
-    n = n_halfspace) # index samples are stored in the columns and by 
+  index_matrix <- sample_index_matrix(x = 1:n_complete_obs, size = n_subsample, 
+    times = n_halfspace) # index samples are stored in the columns and by 
   # indices and not logical to save memory
   
   # we simply sample from a circle with radius 1, as we can choose lambda this
@@ -33,16 +33,18 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = NULL
   # data-matrix seperately and let the function itself get the corresponding column
   # projection matrix has dim = c(sample_size, n_halfspace)
   projection_matrix <- vapply(X = 1:n_halfspace, FUN.VALUE = numeric(n_subsample), 
-    FUN = function(x) {data_matrix[x,] %*% halfspace_directions[,x]})
+    FUN = function(x) {data_matrix[index_matrix[,x],] %*% halfspace_directions[,x]})
   
-  halfspace_positions <- sample_halfspace_positions(projection_matrix)
+  halfspace_positions <- sample_halfspace_positions(projection_matrix = projection_matrix, 
+    scope = scope, n_halfspace = n_halfspace)
   # this gives back the s_i
   
   # now we have to count for each iteratio how many projections are < s_i and >= s_i
   
-  projection_matrix < matrix(halfspace_positions, ncol = n_halfspace, byrow = T)
+  below = projection_matrix < matrix(halfspace_positions, nrow = n_subsample, 
+    ncol = n_halfspace, byrow = T)
   
-  mass_below = colMeans(matrix(projection_matrix)) # we add the matrix just that 
+  mass_below = colMeans(as.matrix(below)) # we add the matrix just that 
   # we avoid any conversion to vectors in case n_halfspace = 1 or n_subsample = 1
   
   mass_above = 1 - mass_below
@@ -65,6 +67,25 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = NULL
 
 
 evaluate_depth <- function(data, halfspaces) {
+  checked_inputs <- check_evaluate_depth(data, halfspaces)
+  data_matrix <- checked_inputs[["data_matrix"]]
+  n_complete_obs <- checked_inputs[["n_complete_obs"]]
+  projection_matrix <- halfspaces[["projection_matrix"]]
+  halfspace_positions <- halfspaces[["halfspace_positions"]]
+  mass_below <- halfspaces[["mass_below"]]
+  n_halfspace <- length(mass_below)
   
+  projection_matrix <- data_matrix %*% halfspaces[["projection_matrix"]]
   
+  below <- projection_matrix < matrix(halfspace_positions, nrow =  n_complete_obs,
+    ncol = n_halfspace, byrow = T)
+  
+  above <- 1 - brlow
+  
+  mass_below_matrix <- matrix(mass_below, nrow = n_complete_obs, ncol = n_halfspace, 
+    byrow = TRUE)
+  
+  mass_above_matrix <- 1 - mass_below_matrix
+  
+  halfspace_masses <- rowMeans(below * mass_below_matrix + above * mass_above_matrix)
 }
