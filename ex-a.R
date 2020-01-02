@@ -40,7 +40,9 @@ train_depth <- function(data, n_halfspace, subsample = 1, scope = 1, seed = NULL
   # this gives back the s_i
   
   # now we have to count for each iteratio how many projections are < s_i and >= s_i
-  
+  # below is a matrix with dim = c(n_subsample, ncol = n_halfspace) which 
+  # indicates whether the projection of the corresponding data-point is above
+  # or belof the halfspace-position
   below = projection_matrix < matrix(halfspace_positions, nrow = n_subsample, 
     ncol = n_halfspace, byrow = T)
   
