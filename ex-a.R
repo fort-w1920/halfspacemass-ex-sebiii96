@@ -72,22 +72,36 @@ evaluate_depth <- function(data, halfspaces) {
   checked_inputs <- check_evaluate_depth(data, halfspaces)
   data_matrix <- checked_inputs[["data_matrix"]]
   n_complete_obs <- checked_inputs[["n_complete_obs"]]
-  projection_matrix <- halfspaces[["projection_matrix"]]
+  
+  halfspace_directions <- halfspaces[["halfspace_directions"]]
   halfspace_positions <- halfspaces[["halfspace_positions"]]
   mass_below <- halfspaces[["mass_below"]]
+  mass_above <- halfspaces[["mass_above"]]
   n_halfspace <- length(mass_below)
   
-  projection_matrix <- data_matrix %*% halfspaces[["projection_matrix"]]
+  projection_matrix <- data_matrix %*% halfspace_directions
   
-  below <- projection_matrix < matrix(halfspace_positions, nrow =  n_complete_obs,
+  # projection_matrix has dim = c(n_complete_ob, n_halfspace)
+  
+  # what we do now: for each of the points in the training sample we add
+  # the masses of the sides on which the point lies to het the halfspace mass
+  # then we divide by n_halfspace and have the halfspace_mass for this point
+  # for this we first create a matrix that indicates whether the point is 
+  # above or below the 
+  
+  mass_below_matrix <- matrix(mass_below, nrow = n_complete_obs, 
     ncol = n_halfspace, byrow = T)
-  
-  above <- 1 - brlow
-  
-  mass_below_matrix <- matrix(mass_below, nrow = n_complete_obs, ncol = n_halfspace, 
-    byrow = TRUE)
-  
   mass_above_matrix <- 1 - mass_below_matrix
   
-  halfspace_masses <- rowMeans(below * mass_below_matrix + above * mass_above_matrix)
+  halfspace_position_matrix <- matrix(halfspace_positions, nrow =  n_complete_obs,
+    ncol = n_halfspace, byrow = T)
+  
+  below_matrix <- projection_matrix < halfspace_position_matrix
+  above_matrix <- 1 - below_matrix
+  
+  # when we multiply th
+  halfspace_masses_training <- rowMeans(below_matrix * mass_below_matrix + 
+      above_matrix * mass_above_matrix)
+  
+  halfspace_masses_training
 }

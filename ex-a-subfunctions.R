@@ -43,11 +43,6 @@ check_train_depth <- function(data, n_halfspace, subsample, scope, seed) {
   )
 }
 
-"halfspace_directions" = halfspace_directions, 
-"halfspace_positions" = halfspace_positions, 
-"mass_below" = mass_below,
-"mass_above" = mass_above
-)
 
 check_evaluate_depth <- function(data, halfspaces) {
   # checl the data
@@ -57,30 +52,39 @@ check_evaluate_depth <- function(data, halfspaces) {
   
   ## check halfspaces
   # check names
+  # we also have to check the names
   checkmate::assert(
-    checkmate::check_list(halfspaces, any.missing = FALSE, len = 4, 
-      names = c("halfspace_directions", "halfspace_positions", 
-        "mass_below", "mass_above")))
+    checkmate::check_list(halfspaces, any.missing = FALSE, len = 4), 
+    checkmate::check_true(all(names(halfspaces) == 
+        c("halfspace_directions", "halfspace_positions", "mass_below", "mass_above"))), 
+    combine = "and")
   # basic tests regarding the type of the data
   checkmate::assert(
-    checkmate::check_matrix("halfspace_directions", any.missing = FALSE),
-    checkmate::check_numeric("halfspace_positions", any.missing = FALSE),
-    checkmate::check_numeric("mass_below", any.missing = FALSE),
-    checkmate::check_numeric("mass_above", any.missing = FALSE)
+    checkmate::check_matrix(halfspaces[["halfspace_directions"]],
+      any.missing = FALSE),
+    checkmate::check_numeric(halfspaces[["halfspace_positions"]],
+      any.missing = FALSE),
+    checkmate::check_numeric(halfspaces[["mass_below"]], 
+      any.missing = FALSE),
+    checkmate::check_numeric(halfspaces[["mass_above"]], 
+      any.missing = FALSE)
   )
   n_halfspace <- length(halfspaces[["halfspace_positions"]])
   
-  # check that the dimesions of the objects fit together 
+  # check that the dimesions of the objects fit together: 
+  # mass above gives the proportion of halfspaces for which a point of the 
+  # sample is on above/below the halfspace. this means there are as many
+  # points as observation
+  # however the halfspace positions have as many columns as the halfspace_positions
+  # as there are as many directions as positions
   checkmate::assert(
-    checkmate::check_true(n_halfspace == length(halfspaces[["mass_below"]])), 
-    checkmate::check_true(n_halfspace == length(halfspaces[["mass_above"]])), 
-    checkmate::check_true(n_)
+    checkmate::check_true(
+      length(halfspaces[["mass_above"]]) == length(halfspaces[["mass_below"]])), 
+    checkmate::check_true(n_halfspace == NCOL(halfspaces[["halfspace_directions"]])), 
+    combine = "and"
   )
 
-)
-  
-  
-  
+
   list(
     "data_matrix" = data_matrix, 
     "n_complete_obs" = n_complete_obs, 
